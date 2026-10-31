@@ -25,7 +25,7 @@ import (
 var (
 	// Put the api key in api-key.text.
 	//
-	//go:embed ssid.text
+	//go:embed api-key.txt
 	apiKey string
 )
 
@@ -55,6 +55,7 @@ func GetQuote() (services.Quote, error) {
 	return services.CreateQuote("AAPL",
 		"",//quote.ShortName,
 		"",
+		0,
 		float64(*quote.C),
 		0.0,//q.FiftyTwoWeekLow,
 		0.0)//q.FiftyTwoWeekHigh)

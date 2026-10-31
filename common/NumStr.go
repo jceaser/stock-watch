@@ -20,7 +20,7 @@ func (n NumStr) HasNumber() bool {
 }
 
 func (n NumStr) HasString() bool {
-  	return n.String != nil
+  	return n.StringValue != nil
 }
 
 func (n NumStr) GetNumber() float64 {
@@ -31,7 +31,7 @@ func (n NumStr) GetNumber() float64 {
 }
 
 func (n NumStr) GetString() string {
-  	if n.String == nil {
+  	if n.StringValue == nil {
 		return ""
   	}
   	return *n.StringValue

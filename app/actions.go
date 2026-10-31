@@ -293,14 +293,14 @@ func DoUpdateStock(state any, command Command, flag string, options ...string) s
 				ret := ""
 				if len(stock.Inventory) > index {
 					if quantity > 0.0 {
-						ret += fmt.Sprintf("Count: %d", data.Stocks[si].Inventory[index].Count)
+						ret += fmt.Sprintf("Count: %.3f", data.Stocks[si].Inventory[index].Count)
 						data.Stocks[si].Inventory[index].Count = quantity
 					}
 					if quantity > 0.0 && value > 0.0 {
 						ret += " "
 					}
 					if value > 0.0 {
-						ret += fmt.Sprintf("Value: %d", data.Stocks[si].Inventory[index].Value)
+						ret += fmt.Sprintf("Value: %.3f", data.Stocks[si].Inventory[index].Value)
 						data.Stocks[si].Inventory[index].Value = value
 					}
 					DataStore(appState.DataFile, data)

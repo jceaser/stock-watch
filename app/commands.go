@@ -11,10 +11,10 @@ import (
 	"maps"
 	"slices"
 	"strings"
-	
+
 	//personal modules
 	"github.com/jceaser/stock-watch/common"
-	
+
 	//third party modules
 	"github.com/kballard/go-shellquote"
 )
@@ -50,7 +50,7 @@ func (self Commands) Run(state any, request string) string {
 		return fmt.Sprintf("Parse Error: %v", err)
 	}
 	//requestAsWords := strings.Split(request, " ")\
-	
+
 	command := strings.ToLower(requestAsWords[0])
 
 	justKeys := slices.Collect(maps.Keys(Cmd.List))
@@ -86,15 +86,15 @@ func DoEcho(state any, command Command, flag string, options ...string) string {
 }
 
 /* overwrite this to have output go somewhere else */
-func Out(buffer *strings.Builder, format string, a ...any) {
-	buffer.WriteString(fmt.Sprintf(format, a...))
+func Out(format string, buffer *strings.Builder, a ...any) {
+	fmt.Fprintf(buffer, format, a...)
 }
 
 func StandardHelpHeader(cmd Command) string {
 	o := new(strings.Builder)
-	Out(o, "\n%s - %s\n\n", cmd.Word, cmd.Description)
-	Out(o, HelpCmdFormat, "Command", "Flags", "Description")
-	Out(o, HelpCmdFormat, "-------", "-----", "-----------")
+	Out("\n%s - %s\n\n", o, cmd.Word, cmd.Description)
+	Out(HelpCmdFormat, o, "Command", "Flags", "Description")
+	Out(HelpCmdFormat, o, "-------", "-----", "-----------")
 	return o.String()
 }
 
@@ -103,35 +103,35 @@ func DoHelp(state any, command Command, flag string, options ...string) string {
 	o := new(strings.Builder)
 	if flag == "help" {
 		cmd := Cmd.List["Help"]
-		Out(o, StandardHelpHeader(cmd))
-		Out(o, HelpCmdFormat, "help", "", "General Help, lists all commands")
-		Out(o, HelpCmdFormat, "help", "<cmd>", "Help on a specific command")
+		Out(StandardHelpHeader(cmd), o)
+		Out(HelpCmdFormat, o, "help", "", "General Help, lists all commands")
+		Out(HelpCmdFormat, o, "help", "<cmd>", "Help on a specific command")
 		return o.String()
 	}
 	if len(options) == 0 {
-		Out(o, "\nHelp Manual\n\n")
-		Out(o, HelpListFormat, "Command", "Description")
-		Out(o, HelpListFormat, "----------", "----------")
+		Out("\nHelp Manual\n\n", o)
+		Out(HelpListFormat, o, "Command", "Description")
+		Out(HelpListFormat, o, "----------", "----------")
 
 		names := common.SortStringKeys[Command](Cmd.List)
 		for _, n := range names {
 			cmd := Cmd.List[n]
-			Out(o, HelpListFormat, cmd.Word, cmd.Description)
+			Out(HelpListFormat, o, cmd.Word, cmd.Description)
 		}
 	} else {
 		//for _, cmd := range Cmd.List {
-		
+
 		justKeys := slices.Collect(maps.Keys(Cmd.List))
 		slices.Sort(justKeys)
 		for _, key := range justKeys {
 			cmd := Cmd.List[key]
 			if strings.HasPrefix(strings.ToLower(cmd.Word), options[0]) {
 				if cmd.Func == nil {
-					Out(o, StandardHelpHeader(cmd))
-					Out(o, fmt.Sprintf(HelpCmdFormat, cmd.Word, "", cmd.Description))
+					Out(StandardHelpHeader(cmd), o)
+					Out(fmt.Sprintf(HelpCmdFormat, cmd.Word, "", cmd.Description), o)
 				} else {
 					foo := cmd.Func
-					Out(o, foo(state, cmd, "help", ""))
+					Out(foo(state, cmd, "help", ""), o)
 					break
 				}
 			}
