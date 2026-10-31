@@ -1,0 +1,42 @@
+name: Check Compilation
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  check_compilation:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+            name: macos-arm64
+          - goos: darwin
+            goarch: amd64
+            name: macos-amd64
+          - goos: linux
+            goarch: arm64
+            name: linux-arm64
+          - goos: linux
+            goarch: amd64
+            name: linux-amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: stable
+
+      - name: Build App
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -o stock-watch-${{ matrix.name }} stock-watch.go
+
+      - name: Compilation Successful
+        run: echo "Compilation succeeded!"

@@ -1,0 +1,79 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Responds to tag versions like v1.0.0
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        include:
+          - goos: darwin
+            goarch: arm64
+            name: macos-arm64
+          - goos: darwin
+            goarch: amd64
+            name: macos-amd64
+          - goos: linux
+            goarch: arm64
+            name: linux-arm64
+          - goos: linux
+            goarch: amd64
+            name: linux-amd64
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.24'
+
+      - name: Run Go tests
+        run: go test ./...
+
+      - name: Build ${{ matrix.name }}
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          run: go build -o stock-watch-${{ matrix.name }} stock-watch.go
+
+      - name: Upload build
+        uses: actions/upload-artifact@v5
+        with:
+          name: stock-watch-${{ matrix.name }}
+          path: stock-watch-${{ matrix.name }}
+
+create_release:
+  needs: build
+  runs-on: ubuntu-latest
+  
+  steps:
+    - name: Download builds
+      uses: actions/download-artifact@v6
+      with:
+        pattern: stock-watch-*
+        path: builds
+        merge-multiple: true
+
+    - name: Create checksums
+      working-directory: builds
+      run: sha256sum * > SHA256SUMS.txt
+    - name: Create Release
+      uses: softprops/action-gh-release@v3
+      with:
+        tag_name: ${{ github.ref_name }}
+        release_name: Release ${{ github.ref_name }}
+        generate_release_notes: true
+        files: |
+          builds/*
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
