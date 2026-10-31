@@ -8,7 +8,6 @@ package stocks
 import (
 	"fmt"
 	"strings"
-	//"github.com/rymdport/portal/account"
 )
 
 /*
@@ -49,6 +48,8 @@ Example data this struct will handle
 	]
 }
 */
+
+//****************************************************************************80
 
 /* wrapper for stock information */
 type StockData struct {

@@ -1,6 +1,7 @@
 package trevordev
 
 //go get github.com/TrevorDev/go-finance
+//not sure if this api is working as needed
 
 import (
 	"fmt"

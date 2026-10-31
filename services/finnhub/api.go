@@ -2,6 +2,9 @@ package finnhub
 
 /*
 https://finnhub.io/dashboard
+
+experimental support, not impressed
+
 */
 
 
@@ -38,17 +41,17 @@ func GetQuote() (services.Quote, error) {
     if err != nil {
     	panic(err)
     }
-    
+
 	//price, _, err := finnhubClient.PriceMetrics(context.Background(), "AAPL")
     price, _, err := finnhubClient.PriceMetrics(context.Background()).Symbol("AAPL").Execute()
     fmt.Printf("%+v\n", price)
     if err != nil {
     	panic(err)
     }
-    
-	
+
+
 	fmt.Printf("%v\n", price)
-	
+
 	return services.CreateQuote("AAPL",
 		"",//quote.ShortName,
 		"",

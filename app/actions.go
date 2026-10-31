@@ -33,15 +33,15 @@ func init() {
 	Cmd = Commands{List: map[string]Command{}}
 	Cmd.A("help", DoHelp, "", "Ask for help")
 	Cmd.A("echo", DoEcho, "", "Repeat yourself, Repeat yourself")
-	
+
 	// CRUD
 	Cmd.A("create", DoCreate, "", "Create a stock record")
 	Cmd.A("read", DoRead, "", "Read all stock records")
 	Cmd.A("update", DoUpdate, "", "Update a stock details")
 	Cmd.A("delete", DoDelete, "", "remove stock from record")
-	
+
 	Cmd.A("alert", DoAlertSet, "", "Set High and Low Alerts for a stock")
-	
+
 	Cmd.A("fetch", DoFetch, "", "Fetch latest prices for all stacks")
 	Cmd.A("assume-alerts", DoLowHighSet, "", "Make an assumption on a good alert low/high value")
 
@@ -49,9 +49,9 @@ func init() {
 	Cmd.A("report-csv", DoReportFormat, "csv", "Run report on stocks")
 	Cmd.A("report-markdown", DoReportFormat, "markdown", "Run report on stocks")
 	Cmd.A("report-shell", DoReportFormat, "shell", "Run report on stocks")
-	
+
 	//Cmd.A("add-price", DoNoImpl, "", "add a new price to the list")
-	
+
 	// Stock innovatory CRuD
 	Cmd.A("stock-create", DoCreateStock, "", "add stocks share count and price")
 	Cmd.A("stock-read", DoReadStock, "", "show the stock count and price list")
@@ -68,9 +68,9 @@ func DoCreate(state any, command Command, flag string, options ...string) string
 	if HelpRequested(options...) || 3 < count {
 		return fmt.Sprintf("%s id description? note?", command.Word)
 	}
-	
+
 	stockId := strings.ToUpper(options[0])
-	
+
 	// 1. check if stock already exists
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
@@ -78,7 +78,7 @@ func DoCreate(state any, command Command, flag string, options ...string) string
 			return fmt.Sprintf("Stock %s (%s) already exists.", found.Name, found.ID)
 		}
  	}
-	
+
 	// 2. check if id exists
 	liveData, err := FetchData(stockId)
 	if err != nil {
@@ -95,10 +95,10 @@ func DoCreate(state any, command Command, flag string, options ...string) string
 	if count > 2 {
 		stock.Note = options[2]
 	}
-	
+
 	// 4. make an assumed high/low alert
 	stock.Alert.Low, stock.Alert.High = AssumeHighLow(liveData)
-	
+
 	// 5. save stock data
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
@@ -175,7 +175,7 @@ func DoDelete(state any, command Command, flag string, options ...string) string
 				break
 			}
 		}
-		
+
 		DataStore(appState.DataFile, data)
 	}
 	return ret
@@ -190,7 +190,7 @@ func DoCreateStock(state any, command Command, flag string, options ...string) s
 	if HelpRequested(options...) || count < 2 || count > 3 {
 		return fmt.Sprintf("%s id count value", command.Word)
 	}
-	
+
 	id := options[0]
 
 	quantity, err := strconv.ParseFloat(options[1], 64)
@@ -208,7 +208,7 @@ func DoCreateStock(state any, command Command, flag string, options ...string) s
 	if value < 0.0 {
 		return "Must have a positive value"
 	}
-	
+
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
 		for y, row := range data.Stocks {
@@ -219,7 +219,7 @@ func DoCreateStock(state any, command Command, flag string, options ...string) s
 		}
 		DataStore(appState.DataFile, data)
 	}
-	
+
 	return ""
 }
 
@@ -255,7 +255,7 @@ func DoUpdateStock(state any, command Command, flag string, options ...string) s
 	if len(stockId) < 1 {
 		return "Must have a stock id: " + options[0]
 	}
-	
+
 	// 1: get index to update
 	index, err :=  strconv.Atoi(options[1])
 	if err != nil {
@@ -264,7 +264,7 @@ func DoUpdateStock(state any, command Command, flag string, options ...string) s
 	if index < 0 {
 		return "Must have a positive row number: " + options[1]
 	}
-	
+
 	// 2: get quantity, mutual funds allow partial ownership, thus a float
 	quantity, err := strconv.ParseFloat(options[2], 64)
 	if err != nil {
@@ -273,7 +273,7 @@ func DoUpdateStock(state any, command Command, flag string, options ...string) s
 	if quantity < 0.0 || quantity != -1.0 {
 		return "Must have a positive quantity number or be -1.0 : " + options[2]
 	}
-	
+
 	// 3: get the stock value
 	value := 0.0
 	if 3 < count {
@@ -391,16 +391,16 @@ func DoFetch(state any, command Command, flag string, options ...string) string 
 				buffer.WriteString(fmt.Sprintf("%v", err))
 				continue
 			}
-			
+
 			data.Stocks[si].Name = stockData.ShortName
 			data.Stocks[si].Week52.High = stockData.FiftyTwoWeekHigh
 			data.Stocks[si].Price = stockData.MarketPrice
 			data.Stocks[si].Week52.Low = stockData.FiftyTwoWeekLow
-			
+
 			when := stockData.DateTime
 			data.Stocks[si].AddPrice(when, stockData.MarketPrice)
 			DataStore(appState.DataFile, data)
-			
+
 			buffer.WriteString(fmt.Sprintf("%s - %f < %f < %f\n",
 				data.Stocks[si].Name,
 				data.Stocks[si].Week52.Low,
@@ -414,9 +414,9 @@ func DoFetch(state any, command Command, flag string, options ...string) string 
 func DoLowHighSet(state any, command Command, flag string, options ...string) string {
 	if HelpRequested(options...) || len(options) < 1 {
 		return fmt.Sprintf("%s id", command.Word)
-	}	
+	}
 	id := options[0]
-	
+
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
 		for si, row := range data.Stocks {
@@ -444,10 +444,10 @@ func DoReport(state any, command Command, flag string, options ...string) string
 	if len(options) > 0 {
 		modes = strings.Split(options[0], ",")
 	}
-	
+
 	head := "%5s | %7s | %7s | %8s | %7s | %7s | %7s | %7s | %-13s | %s\n"
 	format := "%5s | %7.2f | %7.2f | %8.2f | %7.2f | %7.2f | %7.2f | %7.2f | %-13s | %s\n"
-	
+
 	var buffer strings.Builder
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
@@ -477,11 +477,11 @@ func DoReport(state any, command Command, flag string, options ...string) string
 			}
 			out := fmt.Sprintf(format,
 				stock.ID,
-				
+
 				stock.Week52.Low,
 				stock.Price,
 				stock.Week52.High,
-				
+
 				stock.Cost(),
 				stock.Value(),
 				stock.AverageItemCost(),
@@ -491,6 +491,6 @@ func DoReport(state any, command Command, flag string, options ...string) string
 			buffer.WriteString(out)
 		}
 	}
-	
+
 	return buffer.String()
 }
