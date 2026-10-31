@@ -1,0 +1,9 @@
+.aider*
+.env
+
+services/finnhub/api-key.txt
+
+test*.json
+stocks.json
+stock-watch
+
