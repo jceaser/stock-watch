@@ -47,6 +47,7 @@ func init() {
 
 	Cmd.A("report-full", DoReport, "", "Run report on stocks")
 	Cmd.A("report-csv", DoReportFormat, "csv", "Run report on stocks")
+	Cmd.A("report-tab", DoReportFormat, "tab", "Run report on stocks")
 	Cmd.A("report-markdown", DoReportFormat, "markdown", "Run report on stocks")
 	Cmd.A("report-shell", DoReportFormat, "shell", "Run report on stocks")
 
@@ -119,7 +120,7 @@ func DoRead(state any, command Command, flag string, options ...string) string {
 
 	id := ALL
 	if len(options) > 0 {
-		id = options[0]
+		id = strings.ToUpper(strings.TrimSpace(options[0]))
 	}
 
 	var buffer strings.Builder
@@ -191,7 +192,7 @@ func DoCreateStock(state any, command Command, flag string, options ...string) s
 		return fmt.Sprintf("%s id count value", command.Word)
 	}
 
-	id := options[0]
+	id := strings.ToUpper(strings.TrimSpace(options[0]))
 
 	quantity, err := strconv.ParseFloat(options[1], 64)
 	if err != nil {
@@ -223,22 +224,40 @@ func DoCreateStock(state any, command Command, flag string, options ...string) s
 	return ""
 }
 
-/* List out the current stock innovatory */
+
+/* List out the current stock innovatory as a form of a dump, a tab delimitated dump. */
 func DoReadStock(state any, command Command, flag string, options ...string) string {
-	if HelpRequested(options...) || len(options) != 1 {
-		return fmt.Sprintf("%s id", command.Word)
+	count := len(options)
+	if count != 0 && (HelpRequested(options...) || count > 1) {
+		return fmt.Sprintf("%s id? # id=[ALL | stock]", command.Word)
 	}
+
+	const ALLSTOCK = "ALL"
+	id := ALLSTOCK
+	if count > 0 {
+		id = strings.ToUpper(strings.TrimSpace(options[0]))
+	}
+
 	if appState, okay := state.(AppState) ; okay {
 		data := DataLoad(appState.DataFile)
-		for _, stock := range data.Stocks {
-			if stock.ID == options[0] {
-				var buffer strings.Builder
+		var buffer strings.Builder
+		buffer.WriteString("Row\tStock\tInvitory\n")
+		for si, stock := range data.Stocks {
+			if ALLSTOCK == id || id == stock.ID {
+				buffer.WriteString(fmt.Sprintf("%d\t%5s\t[ ", si, stock.ID))
 				for y, row := range stock.Inventory {
-					buffer.WriteString(fmt.Sprintf("%d: %v\n", y, row))
+					if y > 0 {
+						buffer.WriteString(" ; ")
+					}
+					buffer.WriteString(fmt.Sprintf("%7.3f @ %8.3f", row.Count, row.Value))
 				}
-				return buffer.String()
+				buffer.WriteString(" ]\n")
+				if id != ALLSTOCK {
+					break
+				}
 			}
 		}
+		return buffer.String()
 	}
 	return ""
 }

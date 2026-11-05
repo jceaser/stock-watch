@@ -134,6 +134,15 @@ func (obj *StockItem) AddInventory(count float64, value float64) {
 //MARK - Helpers
 
 /* look at all the stocks to find a match */
+func (data StockData) MaxStockInvitory() (int) {
+	maxCount := 0
+	for _, stock := range data.Stocks {
+		maxCount = max(maxCount, len(stock.Inventory))
+	}
+	return maxCount
+}
+
+/* look at all the stocks to find a match */
 func (data StockData) Exists(stockId string) (StockItem, bool) {
 	for _, stock := range data.Stocks {
 		if stock.ID == strings.ToUpper(stockId) {

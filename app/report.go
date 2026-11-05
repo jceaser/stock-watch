@@ -87,10 +87,10 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 		// shortcuts to make the new functions of NumStr
 		n := common.NewNumStrNumber
 		s := common.NewNumStrString
-		
+
 		header := []common.NumStr{s("SYM"), s("52w Low"), s("Price"), s("52w High"), s("Cost"),
 			s("Value"), s("Avg(c)"), s("Profit"), s("Alert"), s("Note")}
-		
+
 		//create a 2D array of NumStr values, values that can be number or strings
 		table := [][]common.NumStr{}
 		table = append(table, header)
@@ -106,7 +106,7 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 			if stock.Price > stock.Alert.High {
 				alert = fmt.Sprintf("%s %.2f", marker_above, stock.Alert.High)
 			}
-			
+
 			//now that we have the special values, get out of requested
 			if 	common.Contains(modes, "alerts") && len(alert) < 1 {
 				continue
@@ -114,7 +114,7 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 			if common.Contains(modes, "invitory") && len(stock.Inventory) < 1 {
 				continue
 			}
-			
+
 			//assemble the row
 			row := []common.NumStr{s(stock.ID),
 				n(stock.Week52.Low),
@@ -128,11 +128,13 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 				s(stock.Note)}
 			table = append(table, row)
 		}
-		
+
 		//send the table to the requested formater
 		var buffer strings.Builder
 		if flag == "csv" {
-			buffer.WriteString(reportCsv(table))
+			buffer.WriteString(reportDeliminated(table, ","))
+		} else if flag == "tab" {
+			buffer.WriteString(reportDeliminated(table, "\t"))
 		} else if flag == "markdown" {
 			buffer.WriteString(reportMarkDown(data.Name, table))
 		} else if flag == "shell" {
@@ -148,19 +150,19 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 }
 
 /* Generate the report as a table formated as a CSV export */
-func reportCsv(table [][]common.NumStr) string {
+func reportDeliminated(table [][]common.NumStr, deliminator string) string {
 	var buffer strings.Builder
 
 	for _, row := range table {
 		for x, cell := range row {
 			if x > 0 {
-				buffer.WriteString(",")
+				buffer.WriteString(deliminator)
 			}
 			if cell.HasNumber() {
 				buffer.WriteString(fmt.Sprintf("%.2f", cell.GetNumber()))
 			} else {
 				text := cell.GetString()
-				if strings.Contains(text, ",") {
+				if strings.Contains(text, deliminator) {
 					buffer.WriteString(fmt.Sprintf("\"%v\"", cell))
 				} else {
 					buffer.WriteString(fmt.Sprintf("%v", cell))
@@ -176,9 +178,6 @@ func reportCsv(table [][]common.NumStr) string {
 func reportMarkDown(title string, table [][]common.NumStr) string {
 	var buffer strings.Builder
 
-	//head := "%5s, %7s, %7s, %8s, %7s, %7s, %7s, %7s, %-13s, %s\n"
-	//format := "%5s, %7.2f, %7.2f, %8.2f, %7.2f, %7.2f, %7.2f, %7.2f, %-13s, %s\n"
-	
 	head := "%5s | %7s | %7s | %8s | %7s | %7s | %7s | %7s | %-13s | %s\n"
 	format := "%5s | %7.2f | %7.2f | %8.2f | %7.2f | %7.2f | %7.2f | %7.2f | %-13s | %s\n"
 
