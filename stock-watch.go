@@ -39,7 +39,7 @@ import (
 
 	//personal
 	"github.com/jceaser/stock-watch/app"
-	
+
 	// third party
 	"github.com/peterh/liner"
 )
@@ -139,7 +139,7 @@ func ShowVersion() {
 func initParams() app.AppState {
 	state := app.AppState{}
 
-	flag.BoolVar(&state.BatchMode, "batch-mode", false, "batch mode vs interactive")
+	flag.BoolVar(&state.BatchMode, "batch", false, "batch mode vs interactive")
 	flag.StringVar(&state.DataFile, "file", "stocks.json", "data file")
 	flag.StringVar(&state.Initial, "initial", "", "Initial commands")
 
@@ -154,18 +154,18 @@ func initParams() app.AppState {
 
 func main() {
 	appData := initParams()
-	
+
 	if appData.Version {
 		ShowVersion()
 		os.Exit(0)
 	}
-	
+
 	//consume Initial setup instructions
 	if len(appData.Initial) > 0 {
 		ProcessLine(appData, appData.Initial)
 		appData.Initial = ""
 	}
-	
+
 	//process stream if it exists, or enter interactive mode
     stat, _ := os.Stdin.Stat()
 	if (stat.Mode() & os.ModeCharDevice) == 0 {
@@ -188,6 +188,6 @@ func main() {
 			InteractiveMode(appData)
 		}
 	}
-	
+
 }
 

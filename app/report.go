@@ -75,7 +75,7 @@ func aboveColor(text, mark string, markColor, normalColor int) int {
 func DoReportFormat(state any, command Command, flag string, options ...string) string {
 	count := len(options)
 	if count != 0 && (flag == "help" || HelpRequested(options...) || 1 < count) {
-		return fmt.Sprintf("%s mode", command.Word)
+		return fmt.Sprintf("%s mode=[alerts & invitory]", command.Word)
 	}
 
 	modes := []string{}
@@ -96,55 +96,59 @@ func DoReportFormat(state any, command Command, flag string, options ...string) 
 		table = append(table, header)
 
 		//loop through the data and build each row
+		totalRowsAdded := 0
 		data := DataLoad(appState.DataFile)
-		for _, stock := range data.Stocks {
-			//create special for alert text
-			alert := ""
-			if stock.Price < stock.Alert.Low {
-				alert = fmt.Sprintf("%s %.2f", marker_below, stock.Alert.Low)
-			}
-			if stock.Price > stock.Alert.High {
-				alert = fmt.Sprintf("%s %.2f", marker_above, stock.Alert.High)
-			}
+		if len(data.Stocks) > 0 {
+			for _, stock := range data.Stocks {
+				//create special for alert text
+				alert := ""
+				if stock.Price < stock.Alert.Low {
+					alert = fmt.Sprintf("%s %.2f", marker_below, stock.Alert.Low)
+				}
+				if stock.Price > stock.Alert.High {
+					alert = fmt.Sprintf("%s %.2f", marker_above, stock.Alert.High)
+				}
 
-			//now that we have the special values, get out of requested
-			if 	common.Contains(modes, "alerts") && len(alert) < 1 {
-				continue
+				//now that we have the special values, get out of requested
+				if 	common.Contains(modes, "alerts") && len(alert) < 1 {
+					continue
+				}
+				if common.Contains(modes, "invitory") && len(stock.Inventory) < 1 {
+					continue
+				}
+				totalRowsAdded += 1
+				//assemble the row
+				row := []common.NumStr{s(stock.ID),
+					n(stock.Week52.Low),
+					n(stock.Price),
+					n(stock.Week52.High),
+					n(stock.Cost()),
+					n(stock.Value()),
+					n(stock.AverageItemCost()),
+					n(stock.Profit()),
+					s(alert),
+					s(stock.Note)}
+				table = append(table, row)
 			}
-			if common.Contains(modes, "invitory") && len(stock.Inventory) < 1 {
-				continue
+			if totalRowsAdded > 0 {
+				//send the table to the requested formater
+				var buffer strings.Builder
+				if flag == "csv" {
+					buffer.WriteString(reportDeliminated(table, ","))
+				} else if flag == "tab" {
+					buffer.WriteString(reportDeliminated(table, "\t"))
+				} else if flag == "markdown" {
+					buffer.WriteString(reportMarkDown(data.Name, table))
+				} else if flag == "shell" {
+					buffer.WriteString(reportShell(data.Name, table))
+				} else {
+					for i, r := range table {
+						buffer.WriteString(fmt.Sprintf("%d) %v\n", i, r))
+					}
+				}
+				return buffer.String()
 			}
-
-			//assemble the row
-			row := []common.NumStr{s(stock.ID),
-				n(stock.Week52.Low),
-				n(stock.Price),
-				n(stock.Week52.High),
-				n(stock.Cost()),
-				n(stock.Value()),
-				n(stock.AverageItemCost()),
-				n(stock.Profit()),
-				s(alert),
-				s(stock.Note)}
-			table = append(table, row)
 		}
-
-		//send the table to the requested formater
-		var buffer strings.Builder
-		if flag == "csv" {
-			buffer.WriteString(reportDeliminated(table, ","))
-		} else if flag == "tab" {
-			buffer.WriteString(reportDeliminated(table, "\t"))
-		} else if flag == "markdown" {
-			buffer.WriteString(reportMarkDown(data.Name, table))
-		} else if flag == "shell" {
-			buffer.WriteString(reportShell(data.Name, table))
-		} else {
-			for i, r := range table {
-				buffer.WriteString(fmt.Sprintf("%d) %v\n", i, r))
-			}
-		}
-		return buffer.String()
 	}
 	return "" // no data, no report
 }
